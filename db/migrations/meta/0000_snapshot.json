@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "94cea98e-0bbd-4008-8edf-d7aface8d9f5",
+  "id": "ae752f8b-2a89-4c2f-9813-02e50f38eedd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "media": {
@@ -77,6 +77,30 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP(3)"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP(3)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP(3)"
         }
       },
       "indexes": {},

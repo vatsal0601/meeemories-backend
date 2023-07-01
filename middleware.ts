@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { authMiddleware } from "@clerk/nextjs";
 
 export default authMiddleware({
@@ -5,7 +6,10 @@ export default authMiddleware({
   debug: process.env.NODE_ENV === "development",
   afterAuth(auth, req, evt) {
     if (!auth.userId && !auth.isPublicRoute)
-      return new Response("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized access" },
+        { status: 401 }
+      );
   },
 });
 

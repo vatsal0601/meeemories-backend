@@ -9,4 +9,7 @@ CREATE TABLE `media` (
 CREATE TABLE `memeries` (
 	`id` serial AUTO_INCREMENT PRIMARY KEY NOT NULL,
 	`user_id` varchar(256) NOT NULL,
-	`description` text);
+	`description` text,
+	`published_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+	`created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+	`updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3));
