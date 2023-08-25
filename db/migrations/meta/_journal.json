@@ -8,6 +8,13 @@
       "when": 1688095177156,
       "tag": "0000_military_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1688352802411,
+      "tag": "0001_lethal_loki",
+      "breakpoints": true
     }
   ]
 }

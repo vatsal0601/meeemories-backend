@@ -36,7 +36,7 @@ export const media = mysqlTable("media", {
   type: mysqlEnum("media_type", ["image", "video"]).notNull(),
   name: varchar("name", { length: 256 }).notNull(),
   url: varchar("url", { length: 256 }).notNull(),
-  blurhash: varchar("blurhash", { length: 256 }),
+  placeholder: text("placeholder"),
 });
 
 export const mediaRelations = relations(media, ({ one }) => ({
