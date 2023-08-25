@@ -1,111 +1,126 @@
 {
   "version": "5",
-  "dialect": "mysql",
-  "id": "ae752f8b-2a89-4c2f-9813-02e50f38eedd",
+  "dialect": "pg",
+  "id": "581971ef-c27c-4cb8-85ce-b5239b562256",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "media": {
       "name": "media",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "memory_id": {
           "name": "memory_id",
-          "type": "int",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "media_type": {
           "name": "media_type",
-          "type": "enum('image','video')",
+          "type": "media_type",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "name": {
           "name": "name",
           "type": "varchar(256)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "url": {
           "name": "url",
           "type": "varchar(256)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
-        "blurhash": {
-          "name": "blurhash",
-          "type": "varchar(256)",
+        "placeholder": {
+          "name": "placeholder",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {}
+      "foreignKeys": {
+        "media_memory_id_memeries_id_fk": {
+          "name": "media_memory_id_memeries_id_fk",
+          "tableFrom": "media",
+          "tableTo": "memeries",
+          "columnsFrom": [
+            "memory_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     },
     "memeries": {
       "name": "memeries",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
           "type": "varchar(256)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "published_at": {
           "name": "published_at",
-          "type": "datetime(3)",
+          "type": "date",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP(3)"
+          "default": "now()"
         },
         "created_at": {
           "name": "created_at",
-          "type": "datetime(3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP(3)"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "datetime(3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP(3)"
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {}
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {
+    "media_type": {
+      "name": "media_type",
+      "values": {
+        "image": "image",
+        "video": "video"
+      }
     }
   },
   "schemas": {},

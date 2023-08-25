@@ -2,16 +2,16 @@ import type { Config } from "drizzle-kit";
 
 import "dotenv/config";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not defined");
+if (!process.env.DRIZZLE_DATABASE_URL) {
+  throw new Error("DRIZZLE_DATABASE_URL is not defined");
 }
 
 export default {
   schema: "./db/schema.ts",
   out: "./db/migrations",
-  driver: "mysql2",
+  driver: "pg",
   dbCredentials: {
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DRIZZLE_DATABASE_URL,
   },
   breakpoints: true,
 } satisfies Config;

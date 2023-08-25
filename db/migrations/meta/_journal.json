@@ -1,19 +1,12 @@
 {
   "version": "5",
-  "dialect": "mysql",
+  "dialect": "pg",
   "entries": [
     {
       "idx": 0,
       "version": "5",
-      "when": 1688095177156,
-      "tag": "0000_military_saracen",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1688352802411,
-      "tag": "0001_lethal_loki",
+      "when": 1692965349416,
+      "tag": "0000_tranquil_skin",
       "breakpoints": true
     }
   ]
