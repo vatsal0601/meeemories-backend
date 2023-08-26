@@ -34,6 +34,7 @@ export const media = pgTable("media", {
     .notNull(),
   type: mediaTypes("media_type").notNull(),
   name: varchar("name", { length: 256 }).notNull(),
+  key: varchar("key", { length: 256 }).notNull(),
   url: varchar("url", { length: 256 }).notNull(),
   placeholder: text("placeholder"),
 });

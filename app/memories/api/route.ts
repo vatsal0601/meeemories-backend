@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { media, memories, type Media } from "@/db/schema";
+import { generatePlaceholder, handleUpload } from "@/utils/media";
 import { auth } from "@clerk/nextjs";
 import { eq } from "drizzle-orm";
 import groupBy from "lodash/groupBy";
 import includes from "lodash/includes";
 import size from "lodash/size";
-import { getPlaiceholder } from "plaiceholder";
 
 const getMediaType = (type: string) => {
   if (includes(type, "image")) return "image";
@@ -40,11 +40,7 @@ export const GET = async () => {
 
     return NextResponse.json(
       {
-        data: groupBy(userMemories, (item) => {
-          if (!item.publishedAt) return "no-date";
-          const date = new Date(item.publishedAt);
-          return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-        }),
+        data: groupBy(userMemories, (memory) => memory.publishedAt),
       },
       { status: 200 }
     );
@@ -83,7 +79,7 @@ export const POST = async (request: NextRequest, response: NextResponse) => {
 
   const memory = memoryReturned[0];
   const mediaToSave: Omit<Media, "id">[] = [];
-  let mediaReturned: Omit<Media, "memoryId">[] = [];
+  let mediaReturned: Omit<Omit<Media, "memoryId">, "key">[] = [];
 
   if (size(medias) > 0) {
     for (const media of medias) {
@@ -92,16 +88,16 @@ export const POST = async (request: NextRequest, response: NextResponse) => {
       if (size === 0 || mediaType === "unknown") break;
       const bytes = await media.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const { base64 } = await getPlaiceholder(buffer, {
-        autoOrient: true,
-        size: 16,
-      });
+      const base64 = await generatePlaceholder(buffer);
+      const { url, key } = await handleUpload(userId, media.name, buffer);
+
       mediaToSave.push({
         memoryId: memory.id,
         name: `${userId}_${media.name}`,
         type: mediaType,
         placeholder: base64,
-        url: "", // TODO: upload to S3
+        url,
+        key,
       });
     }
 
