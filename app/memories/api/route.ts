@@ -1,17 +1,48 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { db } from "@/db";
-import { media, memories, type Media } from "@/db/schema";
+import { type Media } from "@/db/schema";
 import { generatePlaceholder, handleUpload } from "@/utils/media";
+import { saveMedia, saveMemory, userMemories } from "@/utils/queries";
 import { auth } from "@clerk/nextjs";
-import { eq } from "drizzle-orm";
 import groupBy from "lodash/groupBy";
 import includes from "lodash/includes";
+import isEmpty from "lodash/isEmpty";
 import size from "lodash/size";
 
 const getMediaType = (type: string) => {
   if (includes(type, "image")) return "image";
   if (includes(type, "video")) return "video";
   return "unknown";
+};
+
+const getMediaToSave = async (
+  userId: string,
+  memoryId: number,
+  medias: File[]
+) => {
+  const mediaToSave: Omit<Media, "id">[] = [];
+
+  for (const media of medias) {
+    const size = media.size;
+    const mediaType = getMediaType(media.type);
+    console.log("media", size, mediaType);
+    if (size === 0 || mediaType === "unknown") continue;
+    const bytes = await media.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const base64 = await generatePlaceholder(buffer);
+    const { url, key } = await handleUpload(userId, media.name, buffer);
+    if (isEmpty(url) || isEmpty(key)) continue;
+
+    mediaToSave.push({
+      memoryId,
+      name: `${userId}_${media.name}`,
+      type: mediaType,
+      placeholder: base64,
+      url,
+      key,
+    });
+  }
+
+  return mediaToSave;
 };
 
 export const GET = async () => {
@@ -21,26 +52,11 @@ export const GET = async () => {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
 
   try {
-    const userMemories = await db
-      .select({
-        id: memories.id,
-        description: memories.description,
-        publishedAt: memories.publishedAt,
-        media: {
-          name: media.name,
-          type: media.type,
-          placeholder: media.placeholder,
-          url: media.url,
-        },
-      })
-      .from(memories)
-      .where(eq(memories.userId, userId))
-      .leftJoin(media, eq(memories.id, media.memoryId))
-      .orderBy(memories.publishedAt);
+    const memories = await userMemories.execute({ userId });
 
     return NextResponse.json(
       {
-        data: groupBy(userMemories, (memory) => memory.publishedAt),
+        data: groupBy(memories, (memory) => memory.publishedAt),
       },
       { status: 200 }
     );
@@ -53,7 +69,7 @@ export const GET = async () => {
   }
 };
 
-export const POST = async (request: NextRequest, response: NextResponse) => {
+export const POST = async (request: NextRequest) => {
   const { userId } = auth();
 
   if (!userId)
@@ -68,57 +84,18 @@ export const POST = async (request: NextRequest, response: NextResponse) => {
   ) as unknown as string;
   const medias: File[] | null = body.getAll("media") as unknown as File[];
 
-  const memoryReturned = await db
-    .insert(memories)
-    .values({ userId, description, publishedAt })
-    .returning({
-      id: memories.id,
-      description: memories.description,
-      publishedAt: memories.publishedAt,
-    });
-
-  const memory = memoryReturned[0];
-  const mediaToSave: Omit<Media, "id">[] = [];
-  let mediaReturned: Omit<Omit<Media, "memoryId">, "key">[] = [];
+  const memoriesReturned = await saveMemory({
+    userId,
+    description: !isEmpty(description) ? description : undefined,
+    publishedAt: !isEmpty(publishedAt) ? publishedAt : undefined,
+  });
+  const { id } = memoriesReturned[0];
 
   if (size(medias) > 0) {
-    for (const media of medias) {
-      const size = media.size;
-      const mediaType = getMediaType(media.type);
-      if (size === 0 || mediaType === "unknown") break;
-      const bytes = await media.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const base64 = await generatePlaceholder(buffer);
-      const { url, key } = await handleUpload(userId, media.name, buffer);
-
-      mediaToSave.push({
-        memoryId: memory.id,
-        name: `${userId}_${media.name}`,
-        type: mediaType,
-        placeholder: base64,
-        url,
-        key,
-      });
-    }
-
-    mediaReturned = await db.insert(media).values(mediaToSave).returning({
-      id: media.id,
-      name: media.name,
-      type: media.type,
-      placeholder: media.placeholder,
-      url: media.url,
-    });
+    const mediaToSave = await getMediaToSave(userId, id, medias);
+    console.log("mediaToSave", mediaToSave);
+    await saveMedia(mediaToSave);
   }
 
-  return NextResponse.json(
-    {
-      data: {
-        id: memory.id,
-        description: memory.description,
-        publishedAt: memory.publishedAt,
-        media: mediaReturned,
-      },
-    },
-    { status: 200 }
-  );
+  return NextResponse.json({ data: { success: true } }, { status: 200 });
 };

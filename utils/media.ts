@@ -42,8 +42,6 @@ export const handleUpload = async (
 
     url = get(upload, "Location", "");
     key = get(upload, "Key", "");
-
-    console.log(upload);
   } catch (error) {
     console.error(error);
   }
