@@ -10,7 +10,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const memories = pgTable("memeries", {
+export const memories = pgTable("memories", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 256 }).notNull(),
   description: text("description"),

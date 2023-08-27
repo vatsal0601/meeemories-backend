@@ -1,9 +1,8 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import get from "lodash/get";
-import truncate from "lodash/truncate";
+import { nanoid } from "nanoid";
 import { getPlaiceholder } from "plaiceholder";
-import slugify from "slugify";
 
 export const handleUpload = async (
   userId: string,
@@ -12,15 +11,6 @@ export const handleUpload = async (
 ) => {
   let url = "";
   let key = "";
-  const slug = truncate(
-    slugify(name, {
-      lower: true,
-      trim: true,
-      strict: true,
-      replacement: "_",
-    }),
-    { length: 30, separator: "" }
-  );
 
   try {
     const uploadObj = new Upload({
@@ -33,8 +23,9 @@ export const handleUpload = async (
       }),
       params: {
         Bucket: process.env.S3_BUCKET!,
-        Key: `${userId}_${slug}`,
+        Key: `${nanoid()}_${userId}_${name}`,
         Body: buffer,
+        ACL: "public-read",
       },
     });
 
@@ -43,17 +34,23 @@ export const handleUpload = async (
     url = get(upload, "Location", "");
     key = get(upload, "Key", "");
   } catch (error) {
-    console.error(error);
+    console.error("error while executing `handleUpload`: ", error);
   }
 
   return { url, key };
 };
 
 export const generatePlaceholder = async (buffer: Buffer) => {
-  const { base64 } = await getPlaiceholder(buffer, {
-    autoOrient: true,
-    size: 16,
-  });
+  let base64 = "";
+  try {
+    const { base64: placeholder } = await getPlaiceholder(buffer, {
+      autoOrient: true,
+      size: 16,
+    });
+    base64 = placeholder;
+  } catch (error) {
+    console.error("error while executing `generatePlaceholder`: ", error);
+  }
 
   return base64;
 };

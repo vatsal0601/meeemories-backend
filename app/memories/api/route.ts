@@ -22,24 +22,36 @@ const getMediaToSave = async (
   const mediaToSave: Omit<Media, "id">[] = [];
 
   for (const media of medias) {
-    const size = media.size;
-    const mediaType = getMediaType(media.type);
-    console.log("media", size, mediaType);
-    if (size === 0 || mediaType === "unknown") continue;
-    const bytes = await media.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = await generatePlaceholder(buffer);
-    const { url, key } = await handleUpload(userId, media.name, buffer);
-    if (isEmpty(url) || isEmpty(key)) continue;
+    try {
+      const size = media.size / 1e6; // in MB
+      const mediaType = getMediaType(media.type);
+      let base64 = null;
 
-    mediaToSave.push({
-      memoryId,
-      name: `${userId}_${media.name}`,
-      type: mediaType,
-      placeholder: base64,
-      url,
-      key,
-    });
+      if (
+        size === 0 ||
+        mediaType === "unknown" ||
+        (size > 5 && mediaType === "image") ||
+        (size > 50 && mediaType === "video")
+      )
+        continue;
+
+      const bytes = await media.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      if (mediaType === "image") base64 = await generatePlaceholder(buffer);
+      const { url, key } = await handleUpload(userId, media.name, buffer);
+      if (isEmpty(url) || isEmpty(key)) continue;
+
+      mediaToSave.push({
+        memoryId,
+        name: `${userId}_${media.name}`,
+        type: mediaType,
+        placeholder: base64,
+        url,
+        key,
+      });
+    } catch (error) {
+      console.error("error while executing `getMediaToSave`: ", error);
+    }
   }
 
   return mediaToSave;
@@ -61,7 +73,7 @@ export const GET = async () => {
       { status: 200 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("error while executing `GET`: ", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -75,27 +87,34 @@ export const POST = async (request: NextRequest) => {
   if (!userId)
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
 
-  const body = await request.formData();
-  const description: string | null = body.get(
-    "description"
-  ) as unknown as string;
-  const publishedAt: string | null = body.get(
-    "publishedAt"
-  ) as unknown as string;
-  const medias: File[] | null = body.getAll("media") as unknown as File[];
+  try {
+    const body = await request.formData();
+    const description: string | null = body.get(
+      "description"
+    ) as unknown as string;
+    const publishedAt: string | null = body.get(
+      "publishedAt"
+    ) as unknown as string;
+    const medias: File[] | null = body.getAll("media") as unknown as File[];
 
-  const memoriesReturned = await saveMemory({
-    userId,
-    description: !isEmpty(description) ? description : undefined,
-    publishedAt: !isEmpty(publishedAt) ? publishedAt : undefined,
-  });
-  const { id } = memoriesReturned[0];
+    const memoriesReturned = await saveMemory({
+      userId,
+      description: !isEmpty(description) ? description : undefined,
+      publishedAt: !isEmpty(publishedAt) ? publishedAt : undefined,
+    });
+    const { id } = memoriesReturned[0];
 
-  if (size(medias) > 0) {
-    const mediaToSave = await getMediaToSave(userId, id, medias);
-    console.log("mediaToSave", mediaToSave);
-    await saveMedia(mediaToSave);
+    if (size(medias) > 0) {
+      const mediaToSave = await getMediaToSave(userId, id, medias);
+      if (size(mediaToSave) > 0) await saveMedia(mediaToSave);
+    }
+
+    return NextResponse.json({ data: { success: true } }, { status: 200 });
+  } catch (error) {
+    console.error("error while executing `POST`: ", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ data: { success: true } }, { status: 200 });
 };

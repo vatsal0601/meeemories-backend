@@ -21,12 +21,12 @@
     "drizzle-orm": "^0.27.2",
     "drizzle-zod": "^0.4.4",
     "lodash": "^4.17.21",
+    "nanoid": "^4.0.2",
     "next": "13.4.4",
     "plaiceholder": "^3.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "sharp": "^0.32.5",
-    "slugify": "^1.6.6",
     "zod": "^3.21.4"
   },
   "devDependencies": {

@@ -8,22 +8,22 @@ interface SaveMemory {
   publishedAt?: string;
 }
 
-export const userMemories = db
-  .select({
-    id: memories.id,
-    description: memories.description,
-    publishedAt: memories.publishedAt,
-    media: {
-      name: media.name,
-      type: media.type,
-      placeholder: media.placeholder,
-      url: media.url,
+export const userMemories = db.query.memories
+  .findMany({
+    where: eq(memories.userId, placeholder("userId")),
+    orderBy: memories.publishedAt,
+    with: {
+      media: {
+        columns: {
+          id: true,
+          name: true,
+          type: true,
+          placeholder: true,
+          url: true,
+        },
+      },
     },
   })
-  .from(memories)
-  .where(eq(memories.userId, placeholder("userId")))
-  .leftJoin(media, eq(memories.id, media.memoryId))
-  .orderBy(memories.publishedAt)
   .prepare("userMemories");
 
 export const saveMemory = async (data: SaveMemory) =>
